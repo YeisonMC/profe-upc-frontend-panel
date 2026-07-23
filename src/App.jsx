@@ -1,12 +1,5 @@
-import { Button } from "@heroui/react";
+import { AppRouter } from "./app/router/AppRouter.jsx";
 
-const App = () => {
-  return (
-    <div>
-      {" "}
-      <Button>My Button</Button>
-    </div>
-  );
-};
-
-export default App;
+export default function App() {
+  return <AppRouter />;
+}

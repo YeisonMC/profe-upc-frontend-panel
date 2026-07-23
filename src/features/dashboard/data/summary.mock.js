@@ -1,0 +1,171 @@
+import {
+  BookOpen,
+  Building2,
+  CalendarClock,
+  GraduationCap,
+  MessageSquare,
+  Sparkles,
+  Star,
+  ThumbsUp,
+  UsersRound,
+} from "lucide-react";
+
+import { ROUTES } from "../../../app/config/routePaths.js";
+
+export const summaryStats = [
+  {
+    id: "comments",
+    label: "Comentarios",
+    value: 3,
+    suffix: "pendientes",
+    icon: MessageSquare,
+    tone: "amber",
+  },
+  {
+    id: "recommendations",
+    label: "Recomendaciones",
+    value: 2,
+    suffix: "pendientes",
+    icon: ThumbsUp,
+    tone: "amber",
+  },
+  {
+    id: "opinions",
+    label: "Opiniones",
+    value: 13,
+    suffix: "",
+    icon: Star,
+    tone: "green",
+  },
+  {
+    id: "campuses",
+    label: "Sedes",
+    value: 4,
+    suffix: "",
+    icon: Building2,
+    tone: "blue",
+  },
+  {
+    id: "careers",
+    label: "Carreras",
+    value: 7,
+    suffix: "",
+    icon: GraduationCap,
+    tone: "blue",
+  },
+  {
+    id: "professors",
+    label: "Profesores",
+    value: 8,
+    suffix: "",
+    icon: UsersRound,
+    tone: "blue",
+  },
+  {
+    id: "courses",
+    label: "Cursos",
+    value: 16,
+    suffix: "",
+    icon: BookOpen,
+    tone: "blue",
+  },
+  {
+    id: "periods",
+    label: "Periodos",
+    value: 1,
+    suffix: "activo",
+    icon: CalendarClock,
+    tone: "blue",
+  },
+];
+
+export const moderationItems = [
+  {
+    id: "moderation-1",
+    person: "Lucía Mendoza Torres",
+    type: "Comentario",
+    context: "Marketing Digital",
+    date: "19 jun. 2026",
+    status: "Pendiente",
+    icon: MessageSquare,
+    tone: "blue",
+    to: ROUTES.comments,
+  },
+  {
+    id: "moderation-2",
+    person: "Roberto Linares",
+    type: "Recomendación",
+    context: "Comunicaciones",
+    date: "18 jun. 2026",
+    status: "Pendiente",
+    icon: ThumbsUp,
+    tone: "amber",
+    to: ROUTES.recommendations,
+  },
+  {
+    id: "moderation-3",
+    person: "Jorge Antonio Vega",
+    type: "Comentario",
+    context: "Cálculo I",
+    date: "18 jun. 2026",
+    status: "Pendiente",
+    icon: MessageSquare,
+    tone: "blue",
+    to: ROUTES.comments,
+  },
+  {
+    id: "moderation-4",
+    person: "María Fernanda Salazar",
+    type: "Comentario",
+    context: "Algoritmos y Estructuras de Datos",
+    date: "17 jun. 2026",
+    status: "Pendiente",
+    icon: MessageSquare,
+    tone: "blue",
+    to: ROUTES.comments,
+  },
+  {
+    id: "moderation-5",
+    person: "Ana Lucía Paredes",
+    type: "Recomendación",
+    context: "Ingeniería de Software",
+    date: "16 jun. 2026",
+    status: "Pendiente",
+    icon: ThumbsUp,
+    tone: "amber",
+    to: ROUTES.recommendations,
+  },
+];
+
+export const bestRatedProfessor = {
+  rating: "8.5",
+  maximumRating: "10",
+  professor: "Ricardo Torres Peña",
+};
+
+export const quickActions = [
+  {
+    id: "new-evaluation",
+    label: "Registrar evaluación",
+    icon: Sparkles,
+    to: ROUTES.newEvaluation,
+  },
+  {
+    id: "new-campus",
+    label: "Agregar sede",
+    icon: Building2,
+    to: ROUTES.newCampus,
+  },
+  {
+    id: "new-career",
+    label: "Agregar carrera",
+    icon: GraduationCap,
+    to: ROUTES.newCareer,
+  },
+  {
+    id: "new-course",
+    label: "Agregar curso",
+    icon: BookOpen,
+    to: ROUTES.newCourse,
+  },
+];
