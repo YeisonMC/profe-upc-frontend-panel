@@ -54,6 +54,46 @@ export function AppRouter() {
           />
 
           <Route
+            path={ROUTES.professors}
+            element={
+              <TemporaryPage
+                title="Profesores"
+                description="Aquí se implementará la administración y moderación de profesores."
+              />
+            }
+          />
+
+          <Route
+            path={ROUTES.courses}
+            element={
+              <TemporaryPage
+                title="Cursos"
+                description="Aquí se implementará la administración y moderación de cursos."
+              />
+            }
+          />
+
+          <Route
+            path={ROUTES.careers}
+            element={
+              <TemporaryPage
+                title="Carreras"
+                description="Aquí se implementará la administración y moderación de carreras."
+              />
+            }
+          />
+
+          <Route
+            path={ROUTES.campuses}
+            element={
+              <TemporaryPage
+                title="Sedes"
+                description="Aquí se implementará la administración y moderación de sedes."
+              />
+            }
+          />
+
+          <Route
             path={ROUTES.newEvaluation}
             element={
               <TemporaryPage
@@ -68,7 +108,7 @@ export function AppRouter() {
             element={
               <TemporaryPage
                 title="Agregar sede"
-                description="Aquí se implementará posteriormente la administración de sedes."
+                description="Aquí se implementará posteriormente el registro de nuevas sedes."
               />
             }
           />
@@ -78,7 +118,7 @@ export function AppRouter() {
             element={
               <TemporaryPage
                 title="Agregar carrera"
-                description="Aquí se implementará posteriormente la administración de carreras."
+                description="Aquí se implementará posteriormente el registro de nuevas carreras."
               />
             }
           />
@@ -88,7 +128,7 @@ export function AppRouter() {
             element={
               <TemporaryPage
                 title="Agregar curso"
-                description="Aquí se implementará posteriormente la administración de cursos."
+                description="Aquí se implementará posteriormente el registro de nuevos cursos."
               />
             }
           />

@@ -1,9 +1,13 @@
 import {
+  BookOpen,
+  Building2,
   Clock3,
+  GraduationCap,
   LayoutDashboard,
   MessageSquare,
   Star,
   ThumbsUp,
+  UsersRound,
 } from "lucide-react";
 
 import { ROUTES } from "./routePaths.js";
@@ -49,6 +53,30 @@ export const adminNavigationSections = [
         label: "Periodos",
         to: ROUTES.periods,
         icon: Clock3,
+      },
+      {
+        id: "professors",
+        label: "Profesores",
+        to: ROUTES.professors,
+        icon: UsersRound,
+      },
+      {
+        id: "courses",
+        label: "Cursos",
+        to: ROUTES.courses,
+        icon: BookOpen,
+      },
+      {
+        id: "careers",
+        label: "Carreras",
+        to: ROUTES.careers,
+        icon: GraduationCap,
+      },
+      {
+        id: "campuses",
+        label: "Sedes",
+        to: ROUTES.campuses,
+        icon: Building2,
       },
     ],
   },

@@ -117,19 +117,41 @@ export function AdminLayout() {
       </AnimatePresence>
 
       <div className="min-h-dvh pt-16 lg:pl-[250px] lg:pt-0">
-        <main id="admin-main-content" className="min-h-dvh">
+        <main
+          id="admin-main-content"
+          className="min-h-[calc(100dvh-4rem)] overflow-x-clip lg:min-h-dvh"
+        >
           <AnimatePresence mode="wait" initial={false}>
             <motion.div
               key={location.pathname}
               initial={
-                shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 6 }
+                shouldReduceMotion
+                  ? { opacity: 0 }
+                  : {
+                      opacity: 0,
+                      scale: 0.995,
+                    }
               }
-              animate={{ opacity: 1, y: 0 }}
-              exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: -4 }}
-              transition={{
-                duration: shouldReduceMotion ? 0.08 : 0.18,
+              animate={{
+                opacity: 1,
+                scale: 1,
               }}
-              className="min-h-dvh"
+              exit={
+                shouldReduceMotion
+                  ? { opacity: 0 }
+                  : {
+                      opacity: 0,
+                      scale: 0.995,
+                    }
+              }
+              transition={{
+                duration: shouldReduceMotion ? 0.08 : 0.25,
+                ease: [0.22, 1, 0.36, 1],
+              }}
+              style={{
+                transformOrigin: "top center",
+              }}
+              className="min-h-[calc(100dvh-4rem)] lg:min-h-dvh"
             >
               <Outlet />
             </motion.div>

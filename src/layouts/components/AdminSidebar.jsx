@@ -7,7 +7,8 @@ import { ROUTES } from "../../app/config/routePaths.js";
 import { useAuth } from "../../features/auth/hooks/useAuth.js";
 
 function BrandLogo() {
-  const logoUrl = import.meta.env.VITE_UPC_LOGO_URL?.trim();
+  const logoUrl =
+    "https://res.cloudinary.com/dtsfiwmzt/image/upload/v1777857026/Logo_oomlqx.png";
   const [hasImageError, setHasImageError] = useState(false);
 
   const canShowImage = Boolean(logoUrl) && !hasImageError;
