@@ -1,7 +1,4 @@
-import {
-  useMemo,
-  useState,
-} from "react";
+import { useMemo, useState } from "react";
 import {
   AlertCircle,
   CalendarX2,
@@ -9,11 +6,7 @@ import {
   Plus,
   RefreshCw,
 } from "lucide-react";
-import {
-  AnimatePresence,
-  motion,
-  useReducedMotion,
-} from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 
 import {
   DEFAULT_PERIOD_TYPE,
@@ -21,6 +14,7 @@ import {
   PERIOD_TYPE_IDS,
   PERIOD_TYPES,
 } from "../config/periodTypes.js";
+
 import { PeriodCategoryCard } from "../components/PeriodCategoryCard.jsx";
 import { PeriodConfirmModal } from "../components/PeriodConfirmModal.jsx";
 import { PeriodDetailModal } from "../components/PeriodDetailModal.jsx";
@@ -37,12 +31,29 @@ const EMPTY_CONFIRM_STATE = {
 
 export function PeriodsPage() {
   const shouldReduceMotion = useReducedMotion();
-
   const periodsAdmin = usePeriodsAdmin();
 
-  const [selectedType, setSelectedType] = useState(
-    DEFAULT_PERIOD_TYPE,
-  );
+  /*
+   * Garantiza que actionKey siempre sea un string.
+   * Evita errores al utilizar startsWith() o endsWith().
+   */
+  const safeActionKey =
+    typeof periodsAdmin.actionKey === "string" ? periodsAdmin.actionKey : "";
+
+  /*
+   * Protege las colecciones recibidas desde el hook.
+   */
+  const periodsCollections =
+    periodsAdmin.periods && typeof periodsAdmin.periods === "object"
+      ? periodsAdmin.periods
+      : {};
+
+  const activePeriods =
+    periodsAdmin.activePeriods && typeof periodsAdmin.activePeriods === "object"
+      ? periodsAdmin.activePeriods
+      : {};
+
+  const [selectedType, setSelectedType] = useState(DEFAULT_PERIOD_TYPE);
 
   const [formState, setFormState] = useState({
     isOpen: false,
@@ -50,38 +61,74 @@ export function PeriodsPage() {
   });
 
   const [detailOpen, setDetailOpen] = useState(false);
-  const [confirmState, setConfirmState] = useState(
-    EMPTY_CONFIRM_STATE,
-  );
 
+  const [confirmState, setConfirmState] = useState(EMPTY_CONFIRM_STATE);
+
+  /*
+   * Configuración de la categoría seleccionada:
+   * recommendation o review.
+   */
   const selectedConfig = getPeriodTypeConfig(selectedType);
-  const selectedPeriods =
-    periodsAdmin.periods[selectedType] ?? [];
 
+  /*
+   * Garantiza que selectedPeriods siempre sea un arreglo
+   * y elimina posibles registros null o sin _id.
+   */
+  const selectedPeriods = useMemo(() => {
+    const collection = periodsCollections[selectedType];
+
+    if (!Array.isArray(collection)) {
+      return [];
+    }
+
+    return collection.filter((period) => period && period._id);
+  }, [periodsCollections, selectedType]);
+
+  /*
+   * Contador total de períodos de ambas categorías.
+   */
   const totalPeriods = useMemo(() => {
-    return Object.values(periodsAdmin.periods).reduce(
-      (total, collection) => total + collection.length,
-      0,
-    );
-  }, [periodsAdmin.periods]);
+    return Object.values(periodsCollections).reduce((total, collection) => {
+      if (!Array.isArray(collection)) {
+        return total;
+      }
 
+      return total + collection.filter((period) => period && period._id).length;
+    }, 0);
+  }, [periodsCollections]);
+
+  /*
+   * En recommendationPeriod solo puede existir
+   * un período habilitado a la vez.
+   */
   const enabledRecommendationPeriod = useMemo(() => {
-    return periodsAdmin.periods[
-      PERIOD_TYPE_IDS.recommendation
-    ].some((period) => period.isActive);
-  }, [periodsAdmin.periods]);
+    const recommendationPeriods =
+      periodsCollections[PERIOD_TYPE_IDS.recommendation];
+
+    if (!Array.isArray(recommendationPeriods)) {
+      return false;
+    }
+
+    return recommendationPeriods.some(
+      (period) => period && period._id && period.isActive === true,
+    );
+  }, [periodsCollections]);
 
   const creationBlocked =
-    selectedConfig.blocksCreationWhileEnabled &&
-    enabledRecommendationPeriod;
+    selectedConfig.blocksCreationWhileEnabled && enabledRecommendationPeriod;
 
   const createActionKey = `${selectedType}:create`;
 
-  const isFormSaving = formState.period
-    ? periodsAdmin.actionKey ===
-      `${selectedType}:update:${formState.period._id}`
-    : periodsAdmin.actionKey === createActionKey;
+  /*
+   * Estado de guardado del modal de creación o edición.
+   */
+  const isFormSaving = formState.period?._id
+    ? safeActionKey === `${selectedType}:update:${formState.period._id}`
+    : safeActionKey === createActionKey;
 
+  /*
+   * Abrir el formulario de creación.
+   */
   const openCreateForm = () => {
     if (creationBlocked) {
       return;
@@ -93,13 +140,25 @@ export function PeriodsPage() {
     });
   };
 
+  /*
+   * Abrir el formulario de edición.
+   */
   const openEditForm = (period) => {
+    if (!period?._id) {
+      return;
+    }
+
     setFormState({
       isOpen: true,
       period,
     });
   };
 
+  /*
+   * Al cerrar conservamos temporalmente period.
+   * Esto evita problemas mientras el modal realiza
+   * su animación de salida.
+   */
   const closeForm = () => {
     setFormState((currentState) => ({
       ...currentState,
@@ -107,20 +166,37 @@ export function PeriodsPage() {
     }));
   };
 
+  /*
+   * Abrir detalle y consultar el registro por ID.
+   */
   const openDetail = async (period) => {
+    const periodId = period?._id;
+
+    if (!periodId) {
+      return;
+    }
+
     setDetailOpen(true);
 
-    await periodsAdmin.loadPeriodDetail(
-      selectedType,
-      period._id,
-    );
+    await periodsAdmin.loadPeriodDetail(selectedType, periodId);
   };
 
   const closeDetail = () => {
     setDetailOpen(false);
   };
 
+  /*
+   * Abrir confirmación de cierre o eliminación.
+   */
   const openConfirmation = (action, period) => {
+    if (!period?._id) {
+      return;
+    }
+
+    if (action !== "close" && action !== "delete") {
+      return;
+    }
+
     setConfirmState({
       isOpen: true,
       action,
@@ -128,6 +204,10 @@ export function PeriodsPage() {
     });
   };
 
+  /*
+   * Conservamos el período durante la animación
+   * de salida del modal.
+   */
   const closeConfirmation = () => {
     setConfirmState((currentState) => ({
       ...currentState,
@@ -135,18 +215,22 @@ export function PeriodsPage() {
     }));
   };
 
+  /*
+   * Crear o editar un período.
+   */
   const handleFormSubmit = (payload) => {
-    if (formState.period) {
-      return periodsAdmin.updatePeriod(
-        selectedType,
-        formState.period._id,
-        payload,
-      );
+    const periodId = formState.period?._id;
+
+    if (periodId) {
+      return periodsAdmin.updatePeriod(selectedType, periodId, payload);
     }
 
     return periodsAdmin.createPeriod(selectedType, payload);
   };
 
+  /*
+   * Cerrar o eliminar el período seleccionado.
+   */
   const handleConfirmation = () => {
     const periodId = confirmState.period?._id;
 
@@ -158,25 +242,34 @@ export function PeriodsPage() {
     }
 
     if (confirmState.action === "delete") {
-      return periodsAdmin.deletePeriod(
-        selectedType,
-        periodId,
-      );
+      return periodsAdmin.deletePeriod(selectedType, periodId);
     }
 
-    return periodsAdmin.closePeriod(
-      selectedType,
-      periodId,
-    );
+    if (confirmState.action === "close") {
+      return periodsAdmin.closePeriod(selectedType, periodId);
+    }
+
+    return Promise.resolve({
+      ok: false,
+      message: "La acción seleccionada no es válida.",
+    });
   };
 
-  const confirmationActionKey = confirmState.period
-    ? `${selectedType}:${confirmState.action}:${confirmState.period._id}`
-    : "";
+  /*
+   * Identificador de la operación del modal
+   * de confirmación.
+   */
+  const confirmationActionKey =
+    confirmState.period?._id && confirmState.action
+      ? `${selectedType}:${confirmState.action}:${confirmState.period._id}`
+      : "";
 
   const isConfirmationProcessing =
-    periodsAdmin.actionKey === confirmationActionKey;
+    Boolean(confirmationActionKey) && safeActionKey === confirmationActionKey;
 
+  /*
+   * Skeleton de carga inicial.
+   */
   if (periodsAdmin.isLoading) {
     return (
       <div className="px-4 py-6 sm:px-6 lg:px-8 lg:py-10">
@@ -200,8 +293,8 @@ export function PeriodsPage() {
           </div>
 
           <p className="mt-1 text-[13px] leading-5 text-zinc-500">
-            Configura las ventanas de tiempo para recomendaciones de
-            profesores y para comentarios.
+            Configura las ventanas de tiempo para recomendaciones de profesores
+            y para comentarios.
           </p>
         </header>
 
@@ -240,14 +333,10 @@ export function PeriodsPage() {
 
             <button
               type="button"
-              className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-red-200 bg-white px-4 text-sm font-semibold text-red-700 outline-none hover:bg-red-50 focus-visible:ring-4 focus-visible:ring-red-500/15"
+              className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-red-200 bg-white px-4 text-sm font-semibold text-red-700 outline-none transition hover:bg-red-50 focus-visible:ring-4 focus-visible:ring-red-500/15"
               onClick={() => periodsAdmin.reload()}
             >
-              <RefreshCw
-                aria-hidden="true"
-                className="h-4 w-4"
-              />
-
+              <RefreshCw aria-hidden="true" className="h-4 w-4" />
               Reintentar
             </button>
           </div>
@@ -258,20 +347,26 @@ export function PeriodsPage() {
               aria-label="Tipos de períodos"
               className="mt-5 grid gap-3 md:grid-cols-2"
             >
-              {Object.values(PERIOD_TYPES).map((config) => (
-                <PeriodCategoryCard
-                  key={config.id}
-                  config={config}
-                  total={
-                    periodsAdmin.periods[config.id]?.length ?? 0
-                  }
-                  openCount={
-                    periodsAdmin.activePeriods[config.id] ? 1 : 0
-                  }
-                  isSelected={selectedType === config.id}
-                  onSelect={() => setSelectedType(config.id)}
-                />
-              ))}
+              {Object.values(PERIOD_TYPES).map((config) => {
+                const typePeriods = periodsCollections[config.id];
+
+                const typeTotal = Array.isArray(typePeriods)
+                  ? typePeriods.filter((period) => period && period._id).length
+                  : 0;
+
+                const hasActivePeriod = Boolean(activePeriods[config.id]);
+
+                return (
+                  <PeriodCategoryCard
+                    key={config.id}
+                    config={config}
+                    total={typeTotal}
+                    openCount={hasActivePeriod ? 1 : 0}
+                    isSelected={selectedType === config.id}
+                    onSelect={() => setSelectedType(config.id)}
+                  />
+                );
+              })}
             </div>
 
             <div className="mt-5 border-t border-zinc-200 pt-5">
@@ -292,8 +387,7 @@ export function PeriodsPage() {
                   <button
                     type="button"
                     disabled={
-                      creationBlocked ||
-                      periodsAdmin.actionKey === createActionKey
+                      creationBlocked || safeActionKey === createActionKey
                     }
                     title={
                       creationBlocked
@@ -303,18 +397,14 @@ export function PeriodsPage() {
                     className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-upc-red px-4 text-sm font-semibold text-white outline-none transition hover:bg-upc-red-dark focus-visible:ring-4 focus-visible:ring-upc-red/20 disabled:cursor-not-allowed disabled:bg-red-300"
                     onClick={openCreateForm}
                   >
-                    {periodsAdmin.actionKey === createActionKey ? (
+                    {safeActionKey === createActionKey ? (
                       <LoaderCircle
                         aria-hidden="true"
                         className="h-4 w-4 animate-spin"
                       />
                     ) : (
-                      <Plus
-                        aria-hidden="true"
-                        className="h-4 w-4"
-                      />
+                      <Plus aria-hidden="true" className="h-4 w-4" />
                     )}
-
                     Nuevo período
                   </button>
 
@@ -332,13 +422,13 @@ export function PeriodsPage() {
                   id={`period-panel-${selectedType}`}
                   role="tabpanel"
                   aria-labelledby={`period-tab-${selectedType}`}
-                  initial={
-                    shouldReduceMotion
-                      ? { opacity: 1 }
-                      : { opacity: 0 }
-                  }
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
+                  initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0 }}
+                  animate={{
+                    opacity: 1,
+                  }}
+                  exit={{
+                    opacity: 0,
+                  }}
                   transition={{
                     duration: shouldReduceMotion ? 0 : 0.18,
                   }}
@@ -347,28 +437,27 @@ export function PeriodsPage() {
                   {selectedPeriods.length > 0 ? (
                     <div className="space-y-3">
                       {selectedPeriods.map((period) => {
+                        const periodId = period._id;
+
                         const rowActionPrefix = `${selectedType}:`;
+
+                        /*
+                         * safeActionKey siempre es string.
+                         * periodId ya fue validado anteriormente.
+                         */
                         const isBusy =
-                          periodsAdmin.actionKey.startsWith(
-                            rowActionPrefix,
-                          ) &&
-                          periodsAdmin.actionKey.endsWith(
-                            period._id,
-                          );
+                          safeActionKey.startsWith(rowActionPrefix) &&
+                          safeActionKey.endsWith(periodId);
 
                         return (
                           <PeriodRow
-                            key={period._id}
+                            key={periodId}
                             period={period}
                             isBusy={isBusy}
                             onView={() => openDetail(period)}
                             onEdit={() => openEditForm(period)}
-                            onClose={() =>
-                              openConfirmation("close", period)
-                            }
-                            onDelete={() =>
-                              openConfirmation("delete", period)
-                            }
+                            onClose={() => openConfirmation("close", period)}
+                            onDelete={() => openConfirmation("delete", period)}
                           />
                         );
                       })}
@@ -385,8 +474,8 @@ export function PeriodsPage() {
                       </h3>
 
                       <p className="mt-1 max-w-sm text-sm leading-6 text-zinc-500">
-                        Crea el primer período para habilitar esta
-                        ventana de participación.
+                        Crea el primer período para habilitar esta ventana de
+                        participación.
                       </p>
                     </div>
                   )}
