@@ -126,7 +126,9 @@ export function AdminLayout() {
               key={location.pathname}
               initial={
                 shouldReduceMotion
-                  ? { opacity: 0 }
+                  ? {
+                      opacity: 1,
+                    }
                   : {
                       opacity: 0,
                       scale: 0.995,
@@ -136,16 +138,8 @@ export function AdminLayout() {
                 opacity: 1,
                 scale: 1,
               }}
-              exit={
-                shouldReduceMotion
-                  ? { opacity: 0 }
-                  : {
-                      opacity: 0,
-                      scale: 0.995,
-                    }
-              }
               transition={{
-                duration: shouldReduceMotion ? 0.08 : 0.25,
+                duration: shouldReduceMotion ? 0 : 0.3,
                 ease: [0.22, 1, 0.36, 1],
               }}
               style={{

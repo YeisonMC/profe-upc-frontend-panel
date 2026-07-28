@@ -3,12 +3,18 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import { ROUTES } from "../config/routePaths.js";
 import { AdminNotFoundPage } from "../../components/pages/AdminNotFoundPage.jsx";
 import { TemporaryPage } from "../../components/pages/TemporaryPage.jsx";
+import { CareersPage } from "../../features/careers/pages/CareersPage.jsx";
+import { CampusesPage } from "../../features/campuses/pages/CampusesPage.jsx";
+import { CoursesPage } from "../../features/courses/pages/CoursesPage.jsx";
 import { LoginPage } from "../../features/auth/pages/LoginPage.jsx";
+import { ProfessorsPage } from "../../features/professors/pages/ProfessorsPage.jsx";
 import { SummaryPage } from "../../features/dashboard/pages/SummaryPage.jsx";
 import { AdminLayout } from "../../layouts/AdminLayout.jsx";
 import { AuthLayout } from "../../layouts/AuthLayout.jsx";
 import { ProtectedRoute } from "./ProtectedRoute.jsx";
 import { PublicOnlyRoute } from "./PublicOnlyRoute.jsx";
+import { PeriodsPage } from "../../features/periods/pages/PeriodsPage.jsx";
+import { RecommendationsPage } from "../../features/recommendations/pages/RecommendationsPage.jsx";
 
 export function AppRouter() {
   return (
@@ -37,100 +43,36 @@ export function AppRouter() {
             path={ROUTES.comments}
             element={<TemporaryPage title="Comentarios" />}
           />
-
           <Route
             path={ROUTES.recommendations}
-            element={<TemporaryPage title="Recomendaciones" />}
+            element={<RecommendationsPage />}
           />
-
           <Route
             path={ROUTES.opinions}
             element={<TemporaryPage title="Opiniones" />}
           />
+          <Route path={ROUTES.periods} element={<PeriodsPage />} />
+          <Route path={ROUTES.professors} element={<ProfessorsPage />} />
 
-          <Route
-            path={ROUTES.periods}
-            element={<TemporaryPage title="Periodos" />}
-          />
-
-          <Route
-            path={ROUTES.professors}
-            element={
-              <TemporaryPage
-                title="Profesores"
-                description="Aquí se implementará la administración y moderación de profesores."
-              />
-            }
-          />
-
-          <Route
-            path={ROUTES.courses}
-            element={
-              <TemporaryPage
-                title="Cursos"
-                description="Aquí se implementará la administración y moderación de cursos."
-              />
-            }
-          />
-
-          <Route
-            path={ROUTES.careers}
-            element={
-              <TemporaryPage
-                title="Carreras"
-                description="Aquí se implementará la administración y moderación de carreras."
-              />
-            }
-          />
-
-          <Route
-            path={ROUTES.campuses}
-            element={
-              <TemporaryPage
-                title="Sedes"
-                description="Aquí se implementará la administración y moderación de sedes."
-              />
-            }
-          />
+          <Route path={ROUTES.courses} element={<CoursesPage />} />
+          <Route path={ROUTES.careers} element={<CareersPage />} />
+          <Route path={ROUTES.campuses} element={<CampusesPage />} />
 
           <Route
             path={ROUTES.newEvaluation}
-            element={
-              <TemporaryPage
-                title="Registrar evaluación"
-                description="Aquí se implementará posteriormente el registro de evaluaciones."
-              />
-            }
+            element={<TemporaryPage title="Registrar evaluación" />}
           />
-
           <Route
             path={ROUTES.newCampus}
-            element={
-              <TemporaryPage
-                title="Agregar sede"
-                description="Aquí se implementará posteriormente el registro de nuevas sedes."
-              />
-            }
+            element={<CampusesPage openCreateOnMount />}
           />
-
           <Route
             path={ROUTES.newCareer}
-            element={
-              <TemporaryPage
-                title="Agregar carrera"
-                description="Aquí se implementará posteriormente el registro de nuevas carreras."
-              />
-            }
+            element={<CareersPage openCreateOnMount />}
           />
-
           <Route
             path={ROUTES.newCourse}
-            element={
-              <TemporaryPage
-                title="Agregar curso"
-                description="Aquí se implementará posteriormente el registro de nuevos cursos."
-              />
-            }
+            element={<CoursesPage openCreateOnMount />}
           />
 
           <Route path={`${ROUTES.admin}/*`} element={<AdminNotFoundPage />} />
