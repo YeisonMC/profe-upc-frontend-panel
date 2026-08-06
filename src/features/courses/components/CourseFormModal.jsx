@@ -3,21 +3,15 @@ import {
   useMemo,
   useState,
 } from "react";
-import { LoaderCircle } from "lucide-react";
+import { LoaderCircle, Search } from "lucide-react";
 
 import { AdminModal } from "../../../components/admin/AdminModal.jsx";
+import {
+  getCourseCareerIds,
+  getEntityId,
+} from "../utils/course.utils.js";
 
 const COURSE_CODE_PATTERN = /^[A-Z0-9-]+$/;
-
-const getCareerId = (course) => {
-  const career = course?.careerId;
-
-  if (typeof career === "string") {
-    return career;
-  }
-
-  return career?._id ?? career?.id ?? "";
-};
 
 export function CourseFormModal({
   isOpen,
@@ -32,8 +26,9 @@ export function CourseFormModal({
   const [values, setValues] = useState({
     name: "",
     code: "",
-    careerId: "",
+    careerIds: [],
   });
+  const [careerSearch, setCareerSearch] = useState("");
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
@@ -44,8 +39,9 @@ export function CourseFormModal({
     setValues({
       name: initialItem?.name ?? "",
       code: initialItem?.code ?? "",
-      careerId: getCareerId(initialItem),
+      careerIds: getCourseCareerIds(initialItem),
     });
+    setCareerSearch("");
     setErrors({});
   }, [initialItem, isOpen]);
 
@@ -56,6 +52,20 @@ export function CourseFormModal({
       }),
     );
   }, [careers]);
+
+  const filteredCareers = useMemo(() => {
+    const normalizedSearch = careerSearch.trim().toLocaleLowerCase("es");
+
+    if (!normalizedSearch) {
+      return sortedCareers;
+    }
+
+    return sortedCareers.filter((career) =>
+      String(career?.name ?? "")
+        .toLocaleLowerCase("es")
+        .includes(normalizedSearch),
+    );
+  }, [careerSearch, sortedCareers]);
 
   const validate = () => {
     const nextErrors = {};
@@ -81,8 +91,8 @@ export function CourseFormModal({
       }
     }
 
-    if (!values.careerId) {
-      nextErrors.careerId = "Selecciona una carrera.";
+    if (values.careerIds.length === 0) {
+      nextErrors.careerIds = "Selecciona al menos una carrera.";
     }
 
     return nextErrors;
@@ -104,6 +114,35 @@ export function CourseFormModal({
     }
   };
 
+  const toggleCareer = (careerId) => {
+    setValues((currentValues) => {
+      const isSelected = currentValues.careerIds.includes(careerId);
+
+      return {
+        ...currentValues,
+        careerIds: isSelected
+          ? currentValues.careerIds.filter(
+              (selectedCareerId) => selectedCareerId !== careerId,
+            )
+          : [...currentValues.careerIds, careerId],
+      };
+    });
+
+    if (errors.careerIds) {
+      setErrors((currentErrors) => ({
+        ...currentErrors,
+        careerIds: "",
+      }));
+    }
+  };
+
+  const clearCareers = () => {
+    setValues((currentValues) => ({
+      ...currentValues,
+      careerIds: [],
+    }));
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
 
@@ -123,7 +162,7 @@ export function CourseFormModal({
       code: values.code.trim()
         ? values.code.trim().toUpperCase()
         : null,
-      careerId: values.careerId,
+      careerIds: values.careerIds,
     });
   };
 
@@ -200,41 +239,94 @@ export function CourseFormModal({
           ) : null}
         </div>
 
-        <div>
-          <label
-            htmlFor="course-career"
-            className="mb-1.5 block text-sm font-medium text-zinc-800"
-          >
-            Carrera <span className="text-upc-red">*</span>
+        <fieldset
+          disabled={isSubmitting || sortedCareers.length === 0}
+          aria-describedby={errors.careerIds ? "course-careers-error" : undefined}
+        >
+          <legend className="mb-1.5 block text-sm font-medium text-zinc-800">
+            Carreras <span className="text-upc-red">*</span>
+          </legend>
+
+          <label className="relative block">
+            <span className="sr-only">Buscar carreras</span>
+            <Search
+              aria-hidden="true"
+              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400"
+            />
+            <input
+              type="search"
+              value={careerSearch}
+              placeholder="Buscar carrera..."
+              disabled={isSubmitting || sortedCareers.length === 0}
+              className="h-10 w-full rounded-[12px] border border-zinc-300 bg-white pl-9 pr-3 text-sm outline-none focus:border-upc-red focus:ring-4 focus:ring-upc-red/15 disabled:bg-zinc-100"
+              onChange={(event) => setCareerSearch(event.target.value)}
+            />
           </label>
 
-          <select
-            id="course-career"
-            name="careerId"
-            value={values.careerId}
-            disabled={isSubmitting || sortedCareers.length === 0}
-            aria-invalid={Boolean(errors.careerId)}
-            aria-describedby={
-              errors.careerId ? "course-career-error" : undefined
-            }
-            className="h-11 w-full rounded-[12px] border border-zinc-300 bg-white px-3 text-sm outline-none focus:border-upc-red focus:ring-4 focus:ring-upc-red/15 disabled:bg-zinc-100"
-            onChange={handleChange}
+          <div
+            className={[
+              "mt-2 max-h-48 overflow-y-auto rounded-[12px] border p-2",
+              errors.careerIds
+                ? "border-red-300 bg-red-50/30"
+                : "border-zinc-200 bg-zinc-50/40",
+            ].join(" ")}
           >
-            <option value="">Selecciona una carrera</option>
+            {filteredCareers.length > 0 ? (
+              <div className="grid gap-1 sm:grid-cols-2">
+                {filteredCareers.map((career) => {
+                  const careerId = getEntityId(career);
+                  const isChecked = values.careerIds.includes(careerId);
 
-            {sortedCareers.map((career) => (
-              <option
-                key={career._id ?? career.id}
-                value={career._id ?? career.id}
+                  return (
+                    <label
+                      key={careerId}
+                      className={[
+                        "flex min-h-10 cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm transition",
+                        isChecked
+                          ? "border-red-200 bg-red-50 text-red-800"
+                          : "border-transparent bg-white text-zinc-700 hover:border-zinc-200",
+                      ].join(" ")}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={isChecked}
+                        disabled={isSubmitting}
+                        className="h-4 w-4 shrink-0 accent-upc-red"
+                        onChange={() => toggleCareer(careerId)}
+                      />
+                      <span className="min-w-0 truncate">{career.name}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="px-3 py-5 text-center text-sm text-zinc-500">
+                {careerSearch ? "No hay coincidencias." : "No hay carreras disponibles."}
+              </p>
+            )}
+          </div>
+
+          <div className="mt-1.5 flex items-center justify-between gap-3">
+            <p className="text-[11px] text-zinc-500">
+              {values.careerIds.length} seleccionada
+              {values.careerIds.length === 1 ? "" : "s"}
+            </p>
+
+            {values.careerIds.length > 0 ? (
+              <button
+                type="button"
+                disabled={isSubmitting}
+                className="text-[11px] font-semibold text-upc-red outline-none hover:underline focus-visible:ring-2 focus-visible:ring-upc-red/20 disabled:opacity-50"
+                onClick={clearCareers}
               >
-                {career.name}
-              </option>
-            ))}
-          </select>
+                Limpiar
+              </button>
+            ) : null}
+          </div>
 
-          {errors.careerId ? (
-            <p id="course-career-error" className="mt-1.5 text-xs text-red-600">
-              {errors.careerId}
+          {errors.careerIds ? (
+            <p id="course-careers-error" className="mt-1.5 text-xs text-red-600">
+              {errors.careerIds}
             </p>
           ) : null}
 
@@ -243,7 +335,7 @@ export function CourseFormModal({
               Primero debes registrar al menos una carrera activa.
             </p>
           ) : null}
-        </div>
+        </fieldset>
 
         {serverError ? (
           <p

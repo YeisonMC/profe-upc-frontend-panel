@@ -17,7 +17,10 @@ import { ProfessorDetailModal } from "../components/ProfessorDetailModal.jsx";
 import { ProfessorFormModal } from "../components/ProfessorFormModal.jsx";
 import { ProfessorSkeleton } from "../components/ProfessorSkeleton.jsx";
 import { useProfessorAdmin } from "../hooks/useProfessorAdmin.js";
-import { getCourseCareerId, getEntityId } from "../utils/professor.utils.js";
+import {
+  courseBelongsToCareer,
+  getEntityId,
+} from "../utils/professor.utils.js";
 
 const SORT_OPTIONS = [
   { value: "", label: "Más recientes" },
@@ -52,7 +55,8 @@ export function ProfessorsPage() {
     }
 
     return professorAdmin.courses.filter(
-      (course) => getCourseCareerId(course) === professorAdmin.filters.careerId,
+      (course) =>
+        courseBelongsToCareer(course, professorAdmin.filters.careerId),
     );
   }, [professorAdmin.courses, professorAdmin.filters.careerId]);
 

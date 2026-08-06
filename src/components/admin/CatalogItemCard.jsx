@@ -5,6 +5,7 @@ export function CatalogItemCard({
   item,
   icon: Icon,
   meta,
+  metaTitle,
   onEdit,
   onDelete,
   isDeleting = false,
@@ -31,7 +32,10 @@ export function CatalogItemCard({
         </h3>
 
         {meta ? (
-          <p className="mt-0.5 truncate text-[11px] text-zinc-500">
+          <p
+            title={metaTitle ?? meta}
+            className="mt-0.5 truncate text-[11px] text-zinc-500"
+          >
             {meta}
           </p>
         ) : null}

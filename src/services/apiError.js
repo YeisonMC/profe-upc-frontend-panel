@@ -1,4 +1,12 @@
-const SAFE_BACKEND_STATUSES = new Set([400, 404, 409, 422, 429]);
+const STATUS_FALLBACK_MESSAGES = {
+  400: "Datos invalidos. Revisa la informacion enviada.",
+  401: "Sesion no valida. Inicia sesion nuevamente.",
+  403: "Acceso no autorizado o periodo cerrado.",
+  404: "Entidad no encontrada o desactivada.",
+  409: "Conflicto de relaciones, duplicados o elemento ya procesado.",
+  422: "Datos invalidos. Revisa la informacion enviada.",
+  429: "Demasiadas solicitudes. Espera un momento.",
+};
 
 const getBackendMessage = (error) => {
   const message = error?.response?.data?.message;
@@ -31,6 +39,14 @@ export const getApiErrorMessage = (
   const status = error?.response?.status;
   const backendMessage = getBackendMessage(error);
 
+  if (backendMessage) {
+    return backendMessage;
+  }
+
+  if (STATUS_FALLBACK_MESSAGES[status]) {
+    return STATUS_FALLBACK_MESSAGES[status];
+  }
+
   if (status === 401) {
     return "Tu sesión venció o ya no es válida. Inicia sesión nuevamente.";
   }
@@ -39,8 +55,12 @@ export const getApiErrorMessage = (
     return "No tienes permisos para realizar esta operación.";
   }
 
-  if (SAFE_BACKEND_STATUSES.has(status) && backendMessage) {
+  if (backendMessage) {
     return backendMessage;
+  }
+
+  if (STATUS_FALLBACK_MESSAGES[status]) {
+    return STATUS_FALLBACK_MESSAGES[status];
   }
 
   if (status >= 500) {

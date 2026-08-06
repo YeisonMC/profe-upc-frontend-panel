@@ -14,11 +14,11 @@ export const getCourses = async ({ careerId, signal } = {}) => {
   return unwrapListResponse(response, "cursos");
 };
 
-export const createCourse = async ({ name, code, careerId }) => {
+export const createCourse = async ({ name, code, careerIds }) => {
   const response = await httpClient.post(API_PATHS.courses, {
     name,
     code,
-    careerId,
+    careerIds,
   });
 
   return unwrapEntityResponse(response, "el curso");

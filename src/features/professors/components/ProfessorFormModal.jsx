@@ -4,9 +4,10 @@ import { useEffect, useMemo, useState } from "react";
 import { AdminModal } from "../../../components/admin/AdminModal.jsx";
 import {
   areSameIdArrays,
-  getCourseCareerId,
+  courseBelongsToAnyCareer,
   getEntityId,
   getRelationIds,
+  validateProfessorAcademicRelations,
 } from "../utils/professor.utils.js";
 import { RelationSelector } from "./RelationSelector.jsx";
 
@@ -67,6 +68,7 @@ export function ProfessorFormModal({
   const [values, setValues] = useState(EMPTY_FORM);
   const [errors, setErrors] = useState({});
   const [generalError, setGeneralError] = useState("");
+  const [courseWarning, setCourseWarning] = useState("");
 
   useEffect(() => {
     if (!isOpen) {
@@ -87,6 +89,7 @@ export function ProfessorFormModal({
 
     setErrors({});
     setGeneralError("");
+    setCourseWarning("");
   }, [isOpen, professor]);
 
   const availableCourses = useMemo(() => {
@@ -95,28 +98,50 @@ export function ProfessorFormModal({
     }
 
     return courses.filter((course) =>
-      values.careerIds.includes(getCourseCareerId(course)),
+      courseBelongsToAnyCareer(course, values.careerIds),
     );
   }, [courses, values.careerIds]);
 
   const setRelation = (fieldName, selectedIds) => {
-    setValues((current) => {
-      if (fieldName !== "careerIds") {
-        return { ...current, [fieldName]: selectedIds };
-      }
+    if (fieldName !== "careerIds") {
+      setValues((current) => ({ ...current, [fieldName]: selectedIds }));
+      setCourseWarning("");
+      setErrors((current) => ({ ...current, [fieldName]: "" }));
+      setGeneralError("");
+      return;
+    }
 
-      const validCourseIds = current.courseIds.filter((courseId) => {
+    const validCourseIds = values.courseIds.filter((courseId) => {
+      const course = courses.find((item) => getEntityId(item) === courseId);
+
+      return courseBelongsToAnyCareer(course, selectedIds);
+    });
+
+    const removedCount = values.courseIds.length - validCourseIds.length;
+
+    setValues((current) => {
+      const currentValidCourseIds = current.courseIds.filter((courseId) => {
         const course = courses.find((item) => getEntityId(item) === courseId);
-        return course && selectedIds.includes(getCourseCareerId(course));
+
+        return courseBelongsToAnyCareer(course, selectedIds);
       });
 
       return {
         ...current,
         careerIds: selectedIds,
-        courseIds: validCourseIds,
+        courseIds: currentValidCourseIds,
       };
     });
 
+    setCourseWarning(
+      removedCount > 0
+        ? `${removedCount} curso${removedCount === 1 ? "" : "s"} seleccionado${
+            removedCount === 1 ? "" : "s"
+          } se quit${removedCount === 1 ? "o" : "aron"} porque ya no pertenece${
+            removedCount === 1 ? "" : "n"
+          } a las carreras elegidas.`
+        : "",
+    );
     setErrors((current) => ({ ...current, [fieldName]: "" }));
     setGeneralError("");
   };
@@ -176,6 +201,17 @@ export function ProfessorFormModal({
     setGeneralError("");
 
     if (Object.keys(validationErrors).length > 0) {
+      return;
+    }
+
+    const academicValidation = validateProfessorAcademicRelations({
+      selectedCareerIds: values.careerIds,
+      selectedCourseIds: values.courseIds,
+      courses,
+    });
+
+    if (!academicValidation.valid) {
+      setGeneralError(academicValidation.message);
       return;
     }
 
@@ -348,6 +384,15 @@ export function ProfessorFormModal({
             onChange={(ids) => setRelation("courseIds", ids)}
           />
         </div>
+
+        {courseWarning ? (
+          <p
+            role="status"
+            className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-sm text-amber-800"
+          >
+            {courseWarning}
+          </p>
+        ) : null}
 
         {generalError ? (
           <p

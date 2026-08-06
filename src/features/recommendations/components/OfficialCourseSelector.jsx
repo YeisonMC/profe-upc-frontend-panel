@@ -12,7 +12,7 @@ import {
 
 import { recommendationReferenceService } from "../services/recommendationReference.service.js";
 import {
-  getCourseCareerId,
+  courseBelongsToCareer,
   getEntityId,
   getEntityName,
   normalizeSearchText,
@@ -52,14 +52,9 @@ export function OfficialCourseSelector({
             controller.signal,
           );
 
-        const compatibleCourses = items.filter((course) => {
-          const courseCareerId = getCourseCareerId(course);
-
-          return (
-            !courseCareerId ||
-            courseCareerId === careerId
-          );
-        });
+        const compatibleCourses = items.filter((course) =>
+          courseBelongsToCareer(course, careerId),
+        );
 
         setCourses(compatibleCourses);
       } catch (requestError) {

@@ -29,16 +29,13 @@ import {
   getCourses,
   updateCourse,
 } from "../services/course.service.js";
+import {
+  formatCourseCareerList,
+  formatCourseCareerSummary,
+  getCourseCareerNames,
+} from "../utils/course.utils.js";
 
 const getItemId = (item) => item?._id ?? item?.id;
-
-const getCareerName = (course) => {
-  if (typeof course?.careerId === "object") {
-    return course.careerId?.name ?? "Carrera sin nombre";
-  }
-
-  return "Carrera no disponible";
-};
 
 const normalizeText = (value) =>
   String(value ?? "")
@@ -119,7 +116,7 @@ export function CoursesPage({ openCreateOnMount = false }) {
       const searchableText = [
         course.name,
         course.code,
-        getCareerName(course),
+        ...getCourseCareerNames(course),
       ]
         .map(normalizeText)
         .join(" ");
@@ -215,9 +212,13 @@ export function CoursesPage({ openCreateOnMount = false }) {
           <AnimatePresence initial={false}>
             {filteredItems.map((course) => {
               const courseId = getItemId(course);
-              const meta = [course.code, getCareerName(course)]
+              const meta = [course.code, formatCourseCareerSummary(course)]
                 .filter(Boolean)
                 .join(" · ");
+
+              const metaTitle = [course.code, formatCourseCareerList(course)]
+                .filter(Boolean)
+                .join(" - ");
 
               return (
                 <CatalogItemCard
@@ -225,6 +226,7 @@ export function CoursesPage({ openCreateOnMount = false }) {
                   item={course}
                   icon={BookOpen}
                   meta={meta}
+                  metaTitle={metaTitle}
                   isDeleting={collection.deletingId === courseId}
                   onEdit={(item) => {
                     setSelectedCourse(item);

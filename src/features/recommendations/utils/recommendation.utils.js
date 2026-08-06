@@ -1,4 +1,13 @@
 import { RECOMMENDATION_STATUS } from "../config/recommendationConfig.js";
+import {
+  courseBelongsToCareer,
+  getCourseCareerIds,
+} from "../../courses/utils/course.utils.js";
+
+export {
+  courseBelongsToCareer,
+  getCourseCareerIds,
+};
 
 export const getEntityId = (entity) => {
   if (typeof entity === "string") {
@@ -152,5 +161,5 @@ export const areSameIdArrays = (firstIds, secondIds) => {
 };
 
 export const getCourseCareerId = (course) => {
-  return getEntityId(course?.careerId);
+  return getCourseCareerIds(course)[0] ?? "";
 };

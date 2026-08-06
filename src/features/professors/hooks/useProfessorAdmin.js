@@ -21,6 +21,7 @@ import {
   updateProfessor,
 } from "../services/professor.service.js";
 import {
+  courseBelongsToCareer,
   getEntityId,
   replaceProfessorInList,
   sortProfessorsByName,
@@ -334,13 +335,9 @@ export function useProfessorAdmin() {
       return courses;
     }
 
-    return courses.filter((course) => {
-      const careerId = typeof course.careerId === "string"
-        ? course.careerId
-        : course.careerId?._id ?? course.careerId?.id;
-
-      return careerId === filters.careerId;
-    });
+    return courses.filter((course) =>
+      courseBelongsToCareer(course, filters.careerId),
+    );
   }, [courses, filters.careerId]);
 
   return {
